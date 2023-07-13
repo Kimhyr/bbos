@@ -1,7 +1,8 @@
 TARGET := kernel
 
-CC := i686-elf-gcc
-CXXC := i686-elf-g++
+PREFIX := ~/opt/cross/bin
+CC := $(PREFIX)/i686-elf-gcc
+CXXC := $(PREFIX)/i686-elf-g++
 CFLAGS := \
 	-std=c++20 \
 	-ffreestanding \

@@ -31,11 +31,11 @@
 .section .text
     start:
         # Initiate the stack.
-        mov $stack_top, %esp
+        mov     $stack_top, %esp
         call    kmain
     hang:
         # Handle the circumstances of `kmain` returning. 
         cli # Disable CPU interrupts   
         hlt
-        jmp hang
+        jmp     hang
 
