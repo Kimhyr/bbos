@@ -1,34 +1,42 @@
-TARGET := kernel
+CC := clang++
+FLAGS :=                \
+	-target i686-elf    \
+	-ffreestanding      \
+	-std=c++20			\
+	-O0                 \
+	-fno-exceptions 	\
+	-fno-rtti 			\
+	-Wall -Wextra
+CFLAGS := $(FLAGS)      \
+	-masm=att           \
+	-fno-threadsafe-statics\
+	-mcmodel=large      \
+	-mno-red-zone       \
+	-mno-mmx            \
+	-mno-sse            \
+	-mno-sse2 
+LDFLAGS := $(FLAGS)     \
+	-T source/linker.ld \
+	-nostdlib           \
+	-lgcc
 
-PREFIX := ~/opt/cross/bin
-CC := $(PREFIX)/i686-elf-gcc
-CXXC := $(PREFIX)/i686-elf-g++
-CFLAGS := \
-	-std=c++20 \
-	-ffreestanding \
-	-Wall -Wextra -pedantic
-CXXFLAGS := $(CFLAGS)
-LDFLAGS := $(CFLAGS) -nostdlib -T linker.ld -lgcc
-CLEAN :=
+bbos.bin: build/kernel.o build/vga.o build/boot.o
+	$(CC) $(LDFLAGS) -o $@ $^
 
-CFLAGS += -g
+build/kernel.o: source/kernel.cpp
+	$(CC) $(CFLAGS) -o $@ -c $^
 
-#
-# Kernel
-#
-KERNEL := kernel.elf
-KERNEL_OBJECTS := start.o vga.o kernel.o
+build/vga.o: source/vga.cpp
+	$(CC) $(CFLAGS) -o $@ -c $^
 
-CLEAN += $(KERNEL) $(KERNEL_OBJECTS)
+build/boot.o: source/boot.s
+	$(CC) $(CFLAGS) -o $@ -c $^
 
-$(KERNEL): $(KERNEL_OBJECTS)
-	$(CXXC) $(LDFLAGS) -o $@ $^ 
+.PHONY: qemu
+qemu: bbos.bin
+	qemu-system-x86_64 -kernel bbos.bin
 
-$(KERNEL_OBJECTS):
-	$(CXXC) $(CFLAGS) -c start.s -o start.o
-	$(CXXC) $(CFLAGS) -c vga.cpp -o vga.o
-	$(CXXC) $(CFLAGS) -c kernel.cpp -o kernel.o
-
+.PHONY: clean
 clean:
-	rm $(CLEAN)
+	@rm bbos.bin build/* 
 
